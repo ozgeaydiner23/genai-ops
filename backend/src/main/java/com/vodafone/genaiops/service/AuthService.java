@@ -96,7 +96,7 @@ public class AuthService {
 
     /**
      * Clean username - remove domain prefix/suffix
-     * Supports formats: username, DOMAIN\username, username@domain.com
+     * Supports formats: username, DOMAIN\\username, username@domain.com
      */
     private String cleanUsername(String username) {
         if (username == null) {
@@ -105,7 +105,7 @@ public class AuthService {
 
         String cleaned = username.trim();
 
-        // Remove domain prefix (VPARA\username -> username)
+        // Remove domain prefix (VPARA\\username -> username)
         if (cleaned.contains("\\")) {
             cleaned = cleaned.substring(cleaned.indexOf("\\") + 1);
         }
@@ -148,7 +148,7 @@ public class AuthService {
             List<String> userDns = ldapTemplate.search(
                 userSearchBase,
                 searchFilter,
-                (attrs) -> {
+                (javax.naming.directory.Attributes attrs) -> {
                     try {
                         // Get distinguishedName attribute
                         if (attrs.get("distinguishedName") != null) {
@@ -220,7 +220,13 @@ public class AuthService {
             List<String> groups = ldapTemplate.search(
                 "",
                 filter.encode(),
-                (attrs) -> attrs.get("cn") != null ? attrs.get("cn").toString() : null
+                (javax.naming.directory.Attributes attrs) -> {
+                    try {
+                        return attrs.get("cn") != null ? attrs.get("cn").get().toString() : null;
+                    } catch (Exception e) {
+                        return null;
+                    }
+                }
             );
 
             return !groups.isEmpty();

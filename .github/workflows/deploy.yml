@@ -8,16 +8,19 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 env:
-  REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
-  OPENSHIFT_SERVER: ${{ secrets.OPENSHIFT_SERVER }}
-  OPENSHIFT_NAMESPACE: genai-ops
+  OPENSHIFT_SERVER: ${{ vars.OPENSHIFT_SERVER_TST }}
+  OPENSHIFT_TEST_USER: ${{ vars.OPENSHIFT_TEST_USER }}
+  OPENSHIFT_TEST_PASSWORD: ${{ secrets.OPENSHIFT_TEST_PASSWORD }}
+  OPENSHIFT_NAMESPACE: ${{ vars.OPENSHIFT_PROJECT_AD }}
+  REGISTRY_URL: containers.github.vpara.local
 
 jobs:
   build-backend:
     name: Build Backend
-    runs-on: ubuntu-latest
+    runs-on: esnrunner1
     
     steps:
     - name: Checkout code
@@ -28,25 +31,40 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: maven
+    
+    - name: Install Maven
+      shell: bash
+      run: |
+        set -e
+        MAVEN_VERSION=3.9.9
+        curl -fsSL https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz -o maven.tar.gz
+        tar -xzf maven.tar.gz
+        # Bu step içinde hemen kullanabilmek için
+        export MAVEN_HOME="$PWD/apache-maven-${MAVEN_VERSION}"
+        export PATH="$MAVEN_HOME/bin:$PATH"
+        # Sonraki step'ler için kalıcı olsun
+        echo "$MAVEN_HOME/bin" >> $GITHUB_PATH
+        mvn -v
     
     - name: Build with Maven
+      shell: bash
       run: |
         cd backend
-        mvn clean package -DskipTests
+        mvn -B clean install -DskipTests
     
     - name: Run tests
+      shell: bash
       run: |
         cd backend
-        mvn test
-      continue-on-error: false  # Test başarısız olursa pipeline durur
+        mvn -B test
+      continue-on-error: false
     
     - name: Log in to Container Registry
       uses: docker/login-action@v2
       with:
-        registry: ${{ secrets.REGISTRY_URL }}
-        username: ${{ secrets.REGISTRY_USERNAME }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
+        registry: containers.github.vpara.local
+        username: ${{ vars.REGISTRY_LOGIN_USERNAME }}
+        password: ${{ secrets.REGISTRY_LOGIN_TOKEN }}
     
     - name: Build and push Backend Docker image
       uses: docker/build-push-action@v4
@@ -54,12 +72,12 @@ jobs:
         context: ./backend
         push: true
         tags: |
-          ${{ secrets.REGISTRY_URL }}/genai-ops-backend:latest
-          ${{ secrets.REGISTRY_URL }}/genai-ops-backend:${{ github.sha }}
+          ${{ env.REGISTRY_URL }}/${{ github.repository_owner }}/genai-ops-backend:latest
+          ${{ env.REGISTRY_URL }}/${{ github.repository_owner }}/genai-ops-backend:${{ github.sha }}
 
   build-frontend:
     name: Build Frontend
-    runs-on: ubuntu-latest
+    runs-on: esnrunner1
     
     steps:
     - name: Checkout code
@@ -81,14 +99,14 @@ jobs:
       run: |
         cd frontend
         npm test -- --run
-      continue-on-error: true  # Frontend testleri yoksa devam et
+      continue-on-error: true
     
     - name: Log in to Container Registry
       uses: docker/login-action@v2
       with:
-        registry: ${{ secrets.REGISTRY_URL }}
-        username: ${{ secrets.REGISTRY_USERNAME }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
+        registry: containers.github.vpara.local
+        username: ${{ vars.REGISTRY_LOGIN_USERNAME }}
+        password: ${{ secrets.REGISTRY_LOGIN_TOKEN }}
     
     - name: Build and push Frontend Docker image
       uses: docker/build-push-action@v4
@@ -98,12 +116,12 @@ jobs:
         build-args: |
           VITE_API_URL=https://genaiops-api.vpara.local
         tags: |
-          ${{ secrets.REGISTRY_URL }}/genai-ops-frontend:latest
-          ${{ secrets.REGISTRY_URL }}/genai-ops-frontend:${{ github.sha }}
+          ${{ env.REGISTRY_URL }}/${{ github.repository_owner }}/genai-ops-frontend:latest
+          ${{ env.REGISTRY_URL }}/${{ github.repository_owner }}/genai-ops-frontend:${{ github.sha }}
 
   deploy:
     name: Deploy to OpenShift
-    runs-on: ubuntu-latest
+    runs-on: esnrunner1
     needs: [build-backend, build-frontend]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
@@ -118,7 +136,8 @@ jobs:
     
     - name: Log in to OpenShift
       run: |
-        oc login --token=${{ secrets.OPENSHIFT_TOKEN }} --server=${{ secrets.OPENSHIFT_SERVER }}
+        oc login "${OPENSHIFT_SERVER}" --insecure-skip-tls-verify=true \
+          -u "${OPENSHIFT_TEST_USER}" -p "${OPENSHIFT_TEST_PASSWORD}"
         oc project ${{ env.OPENSHIFT_NAMESPACE }}
     
     - name: Deploy LDAP CA Certificate ConfigMap (if not exists)
@@ -163,7 +182,7 @@ jobs:
       run: |
         oc apply -f deployment/backend-deployment.yaml
         oc set image deployment/genai-ops-backend \
-          backend=${{ secrets.REGISTRY_URL }}/genai-ops-backend:${{ github.sha }}
+          backend=${{ env.REGISTRY_URL }}/${{ github.repository_owner }}/genai-ops-backend:${{ github.sha }}
         echo "Waiting for backend rollout..."
         oc rollout status deployment/genai-ops-backend --timeout=5m
         echo "✓ Backend deployed"
@@ -172,7 +191,7 @@ jobs:
       run: |
         oc apply -f deployment/frontend-deployment.yaml
         oc set image deployment/genai-ops-frontend \
-          frontend=${{ secrets.REGISTRY_URL }}/genai-ops-frontend:${{ github.sha }}
+          frontend=${{ env.REGISTRY_URL }}/${{ github.repository_owner }}/genai-ops-frontend:${{ github.sha }}
         echo "Waiting for frontend rollout..."
         oc rollout status deployment/genai-ops-frontend --timeout=5m
         echo "✓ Frontend deployed"
