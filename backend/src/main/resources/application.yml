@@ -5,16 +5,16 @@ spring:
   application:
     name: genai-ops-backend
   
-  # Database configuration (Phase 1.2)
+  # Database configuration (External PostgreSQL)
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/genaiops_audit}
-    username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:postgres}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/genaiops}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
   
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
