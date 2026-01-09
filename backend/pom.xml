@@ -35,6 +35,12 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
         
+        <!-- Spring Boot Actuator (Health Checks) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        
         <!-- Spring LDAP -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
