@@ -79,3 +79,5 @@ management:
       enabled: true
     readinessState:
       enabled: true
+    ldap:
+      enabled: false  # Disable LDAP health check (we handle it manually)
