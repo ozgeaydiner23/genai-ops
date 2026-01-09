@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: genai-ops-db
+    environment:
+      POSTGRES_DB: genaiops
+      POSTGRES_USER: genaiops
+      POSTGRES_PASSWORD: genaiops123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - genai-ops-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U genaiops"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: genai-ops-backend
+    environment:
+      # Database Configuration
+      DB_URL: jdbc:postgresql://postgres:5432/genaiops
+      DB_USERNAME: genaiops
+      DB_PASSWORD: genaiops123
+      
+      # LLM Configuration (Vodafone Practicus API)
+      LLM_ENDPOINT_BASE_URL: https://practicus.vodafone.local
+      LLM_MODEL_NAME: cwyd-llm-general-prod
+      LLM_MODE: llm_as_service
+      LLM_API_TOKEN: mock-token  # JWT token or API key (sent as Bearer token)
+      LLM_TIMEOUT: 45000  # 45 seconds
+      LLM_SYSTEM_PROMPT: "You are an AI operations assistant for Vodafone. Your role is to help users with technical issues, provide troubleshooting guidance, and answer questions about systems and operations. Provide clear, accurate, and helpful responses in a professional manner."
+      
+      # LDAP Configuration (Vpara Active Directory - for local testing use mock)
+      LDAP_URL: ldaps://172.31.234.41:636
+      LDAP_DOMAIN: Vpara.local
+      LDAP_BASE_DN: DC=vpara,DC=local
+      LDAP_BIND_DN: CN=srvc.ldap_prd,OU=VFTR_Admin,OU=VPARA,DC=vpara,DC=local
+      LDAP_BIND_PASSWORD: admin  # Local mock - production'da IT'den alınacak
+      LDAP_USER_SEARCH_BASE: OU=VPARA,DC=vpara,DC=local
+      LDAP_USER_SEARCH_FILTER: (sAMAccountName={0})
+      LDAP_AUTH_GROUP: CN=vepas_genaiops_edit,OU=Groups,DC=vpara,DC=local
+      LDAP_CA_CERT_PATH: /etc/ssl/certs/vpara-ca/vpara-root-ca.crt
+      
+      # JWT Configuration
+      JWT_SECRET: your-secret-key-change-this-in-production-min-256-bits
+      JWT_EXPIRATION: 28800000
+      
+      # Admin User Configuration
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin
+      ADMIN_ENABLED: "true"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - genai-ops-network
+    restart: unless-stopped
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: genai-ops-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - genai-ops-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  genai-ops-network:
+    driver: bridge

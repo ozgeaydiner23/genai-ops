@@ -1,0 +1,208 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: genai-ops-backend
+  namespace: genai-ops
+  labels:
+    app: genai-ops
+    component: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: genai-ops
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: genai-ops
+        component: backend
+    spec:
+      containers:
+      - name: backend
+        image: your-registry/genai-ops-backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        # Database Configuration
+        - name: DB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: DB_URL
+        - name: DB_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: genai-ops-secret
+              key: DB_PASSWORD
+        
+        # LLM Configuration (Vodafone Practicus API)
+        - name: LLM_ENDPOINT_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: LLM_ENDPOINT_BASE_URL
+        - name: LLM_MODEL_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: LLM_MODEL_NAME
+        - name: LLM_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: LLM_MODE
+        - name: LLM_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: genai-ops-secret
+              key: LLM_API_TOKEN
+        - name: LLM_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: LLM_TIMEOUT
+        - name: LLM_SYSTEM_PROMPT
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: LLM_SYSTEM_PROMPT
+        
+        # LDAP Configuration (Vpara Active Directory)
+        - name: LDAP_URL
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: LDAP_URL
+        - name: LDAP_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: LDAP_DOMAIN
+        - name: LDAP_BASE_DN
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: LDAP_BASE_DN
+        - name: LDAP_BIND_DN
+          valueFrom:
+            secretKeyRef:
+              name: genai-ops-secret
+              key: LDAP_BIND_DN
+        - name: LDAP_BIND_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: genai-ops-secret
+              key: LDAP_BIND_PASSWORD
+        - name: LDAP_USER_SEARCH_BASE
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: LDAP_USER_SEARCH_BASE
+        - name: LDAP_USER_SEARCH_FILTER
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: LDAP_USER_SEARCH_FILTER
+        - name: LDAP_AUTH_GROUP
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: LDAP_AUTH_GROUP
+        - name: LDAP_CA_CERT_PATH
+          value: "/etc/ssl/certs/vpara-ca/vpara-root-ca.crt"
+        
+        # JWT Configuration
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: genai-ops-secret
+              key: JWT_SECRET
+        - name: JWT_EXPIRATION
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: JWT_EXPIRATION
+        
+        # Admin Configuration
+        - name: ADMIN_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: ADMIN_USERNAME
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: genai-ops-secret
+              key: ADMIN_PASSWORD
+        - name: ADMIN_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: genai-ops-config
+              key: ADMIN_ENABLED
+        
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        
+        volumeMounts:
+        - name: vpara-ca-cert
+          mountPath: /etc/ssl/certs/vpara-ca
+          readOnly: true
+        
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      
+      volumes:
+      - name: vpara-ca-cert
+        configMap:
+          name: vpara-ldap-ca-cert
+          defaultMode: 0644
+      
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: genai-ops-backend
+  namespace: genai-ops
+  labels:
+    app: genai-ops
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: genai-ops
+    component: backend

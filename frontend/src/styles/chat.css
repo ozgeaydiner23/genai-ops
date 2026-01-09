@@ -1,0 +1,285 @@
+/* GENAI-OPS Chat Styles */
+/* Chat-specific component styling */
+
+/* ========== Message Bubbles ========== */
+.message {
+  display: flex;
+  gap: var(--spacing-sm);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.message-ai {
+  flex-direction: row;
+}
+
+.message-user {
+  flex-direction: row-reverse;
+}
+
+.message-avatar {
+  flex-shrink: 0;
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-width: 70%;
+}
+
+.message-user .message-content {
+  max-width: 60%;
+  align-items: flex-end;
+}
+
+.message-bubble {
+  padding: 16px 20px;
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-small);
+  word-wrap: break-word;
+}
+
+.message-ai .message-bubble {
+  background: var(--color-dark-bg-secondary);
+  border-bottom-left-radius: var(--radius-small);
+}
+
+.message-user .message-bubble {
+  background: var(--color-vodafone-red);
+  border-bottom-right-radius: var(--radius-small);
+}
+
+.message-text {
+  font-size: var(--font-size-body);
+  color: var(--color-white);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.message-timestamp {
+  font-size: var(--font-size-tiny);
+  color: var(--color-medium-gray);
+  margin-top: var(--spacing-xs);
+}
+
+/* ========== Code Blocks ========== */
+.code-block {
+  background: #000000;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-md);
+  margin: var(--spacing-sm) 0;
+  overflow-x: auto;
+}
+
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.code-language {
+  font-size: var(--font-size-small);
+  color: var(--color-medium-gray);
+  text-transform: uppercase;
+  font-weight: var(--font-weight-semibold);
+}
+
+.code-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-medium-gray);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+  font-size: var(--font-size-small);
+  background: transparent;
+  border: none;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-small);
+}
+
+.code-copy-btn:hover {
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.code-content {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-white);
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+.code-content pre {
+  margin: 0;
+}
+
+/* ========== Feedback Buttons ========== */
+.feedback-buttons {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.feedback-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 6px 12px;
+  border-radius: var(--radius-medium);
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--color-medium-gray);
+  font-size: var(--font-size-small);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.feedback-btn:hover {
+  border-color: var(--color-vodafone-red);
+  color: var(--color-vodafone-red);
+}
+
+.feedback-btn.active {
+  background: var(--color-vodafone-red);
+  border-color: var(--color-vodafone-red);
+  color: var(--color-white);
+}
+
+.feedback-btn.liked {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.feedback-btn.disliked {
+  background: rgba(255, 82, 82, 0.2);
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.feedback-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========== Typing Indicator ========== */
+.typing-indicator {
+  display: flex;
+  gap: var(--spacing-xs);
+  padding: 16px 20px;
+  background: var(--color-dark-bg-secondary);
+  border-radius: var(--radius-large);
+  border-bottom-left-radius: var(--radius-small);
+  width: fit-content;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-round);
+  background: var(--color-medium-gray);
+  animation: typingDot 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingDot {
+  0%, 60%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-8px);
+  }
+}
+
+/* ========== Empty State ========== */
+.chat-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl);
+  text-align: center;
+  color: var(--color-medium-gray);
+}
+
+.chat-empty-icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-vodafone-red);
+  opacity: 0.5;
+}
+
+.chat-empty-title {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-white);
+  margin-bottom: var(--spacing-sm);
+}
+
+.chat-empty-description {
+  font-size: var(--font-size-body);
+  color: var(--color-medium-gray);
+  max-width: 400px;
+}
+
+/* ========== Error Message ========== */
+.message-error {
+  padding: var(--spacing-md);
+  background: rgba(255, 82, 82, 0.1);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-medium);
+  color: var(--color-error);
+  font-size: var(--font-size-small);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.message-error-icon {
+  flex-shrink: 0;
+}
+
+/* ========== Scroll to Bottom Button ========== */
+.scroll-to-bottom {
+  position: fixed;
+  bottom: 100px;
+  right: var(--spacing-xl);
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-round);
+  background: var(--color-vodafone-red);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-large);
+  transition: all var(--transition-fast);
+  z-index: var(--z-index-sticky);
+}
+
+.scroll-to-bottom:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-red-glow);
+}
+
+.scroll-to-bottom.hidden {
+  opacity: 0;
+  pointer-events: none;
+}

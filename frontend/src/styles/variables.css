@@ -1,0 +1,93 @@
+/* GENAI-OPS Design System - CSS Variables */
+/* Based on design.md specifications */
+
+:root {
+  /* ========== Primary Colors ========== */
+  --color-vodafone-red: #E60000;
+  --color-dark-bg: #1a1a1a;
+  --color-dark-bg-secondary: #2a2a2a;
+  --color-charcoal: #333333;
+  --color-charcoal-light: #444444;
+  
+  /* ========== Secondary Colors ========== */
+  --color-white: #FFFFFF;
+  --color-light-gray: #F5F5F5;
+  --color-light-gray-dark: #E8E8E8;
+  --color-medium-gray: #999999;
+  --color-medium-gray-light: #CCCCCC;
+  
+  /* ========== Status Colors ========== */
+  --color-success: #4CAF50;
+  --color-success-bright: #00C853;
+  --color-warning: #FFC107;
+  --color-warning-bright: #FFB300;
+  --color-error: #FF5252;
+  --color-error-dark: #F44336;
+  --color-info: #2196F3;
+  --color-info-light: #42A5F5;
+  
+  /* ========== Gradients ========== */
+  --gradient-red: linear-gradient(135deg, #E60000, #FF4444);
+  --gradient-dark: linear-gradient(180deg, #1a1a1a, #2a2a2a);
+  --gradient-light: linear-gradient(135deg, #F5F5F5, #FFFFFF);
+  
+  /* ========== Glass Effect ========== */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  
+  /* ========== Typography ========== */
+  --font-primary: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Fira Code", "Courier New", monospace;
+  
+  /* Font Sizes */
+  --font-size-h1: 32px;
+  --font-size-h2: 24px;
+  --font-size-h3: 20px;
+  --font-size-body-large: 16px;
+  --font-size-body: 14px;
+  --font-size-small: 12px;
+  --font-size-tiny: 10px;
+  
+  /* Font Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* ========== Spacing ========== */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+  
+  /* ========== Border Radius ========== */
+  --radius-small: 4px;
+  --radius-medium: 8px;
+  --radius-large: 12px;
+  --radius-xl: 16px;
+  --radius-round: 50%;
+  
+  /* ========== Shadows ========== */
+  --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-large: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --shadow-red-glow: 0 4px 20px rgba(230, 0, 0, 0.3);
+  
+  /* ========== Transitions ========== */
+  --transition-fast: 200ms ease-in-out;
+  --transition-normal: 300ms ease-in-out;
+  --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* ========== Z-Index Layers ========== */
+  --z-index-base: 1;
+  --z-index-dropdown: 100;
+  --z-index-sticky: 200;
+  --z-index-fixed: 300;
+  --z-index-modal-backdrop: 400;
+  --z-index-modal: 500;
+  --z-index-popover: 600;
+  --z-index-tooltip: 700;
+}

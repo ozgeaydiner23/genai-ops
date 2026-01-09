@@ -1,0 +1,63 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: genai-ops-backend
+  
+  # Database configuration (Phase 1.2)
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/genaiops_audit}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+# LLM Configuration (Vodafone Practicus API)
+llm:
+  endpoint-base-url: ${LLM_ENDPOINT_BASE_URL:https://practicus.vodafone.local}
+  model-name: ${LLM_MODEL_NAME:cwyd-llm-general-prod}
+  mode: ${LLM_MODE:llm_as_service}
+  api-token: ${LLM_API_TOKEN:mock-token}
+  timeout: ${LLM_TIMEOUT:45000}  # 45 seconds (recommended by Vodafone)
+  system-prompt: ${LLM_SYSTEM_PROMPT:You are an AI operations assistant for Vodafone. Your role is to help users with technical issues, provide troubleshooting guidance, and answer questions about systems and operations. Provide clear, accurate, and helpful responses in a professional manner.}
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:genai-ops-secret-key-change-in-production}
+  expiration: 28800000  # 8 hours in milliseconds
+
+# LDAP Configuration (Vpara Active Directory)
+ldap:
+  url: ${LDAP_URL:ldaps://172.31.234.41:636}
+  domain: ${LDAP_DOMAIN:Vpara.local}
+  base-dn: ${LDAP_BASE_DN:DC=vpara,DC=local}
+  bind-dn: ${LDAP_BIND_DN:CN=srvc.ldap_prd,OU=VFTR_Admin,OU=VPARA,DC=vpara,DC=local}
+  bind-password: ${LDAP_BIND_PASSWORD:admin}
+  user-search-base: ${LDAP_USER_SEARCH_BASE:OU=VPARA,DC=vpara,DC=local}
+  user-search-filter: ${LDAP_USER_SEARCH_FILTER:(sAMAccountName={0})}
+  auth-group: ${LDAP_AUTH_GROUP:CN=vepas_genaiops_edit,OU=Groups,DC=vpara,DC=local}
+  ca-cert-path: ${LDAP_CA_CERT_PATH:/etc/ssl/certs/vpara-ca/vpara-root-ca.crt}
+
+# Admin User Configuration
+admin:
+  username: ${ADMIN_USERNAME:admin}
+  password: ${ADMIN_PASSWORD:admin}
+  enabled: ${ADMIN_ENABLED:true}
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.vodafone.genaiops: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

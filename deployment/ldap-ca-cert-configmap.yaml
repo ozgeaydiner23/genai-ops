@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vpara-ldap-ca-cert
+  namespace: genai-ops
+  labels:
+    app: genai-ops
+    component: ldap
+binaryData:
+  # Vpara Root CA Certificate (Base64 encoded)
+  # IT ekibinden alınacak: vpara-root-ca.crt
+  # Encode komutu: cat vpara-root-ca.crt | base64 -w 0
+  vpara-root-ca.crt: |
+    <BASE64_ENCODED_CERTIFICATE_HERE>
+    
+# NOT: Bu dosyayı IT ekibinden alınan sertifika ile güncelleyin
+# Örnek kullanım:
+# 1. IT'den vpara-root-ca.crt dosyasını alın
+# 2. Base64 encode edin: cat vpara-root-ca.crt | base64 -w 0
+# 3. Yukarıdaki <BASE64_ENCODED_CERTIFICATE_HERE> kısmını değiştirin
+# 4. Apply edin: oc apply -f deployment/ldap-ca-cert-configmap.yaml

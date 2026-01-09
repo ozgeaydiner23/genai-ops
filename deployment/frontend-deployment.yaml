@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: genai-ops-frontend
+  namespace: genai-ops
+  labels:
+    app: genai-ops
+    component: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: genai-ops
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: genai-ops
+        component: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: your-registry/genai-ops-frontend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: genai-ops-frontend
+  namespace: genai-ops
+  labels:
+    app: genai-ops
+    component: frontend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  selector:
+    app: genai-ops
+    component: frontend

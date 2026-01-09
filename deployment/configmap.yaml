@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: genai-ops-config
+  namespace: genai-ops
+  labels:
+    app: genai-ops
+data:
+  # Database Configuration
+  DB_URL: "jdbc:postgresql://postgres-service:5432/genaiops"
+  DB_USERNAME: "genaiops"
+  
+  # LLM Service Configuration (Vodafone Practicus API)
+  LLM_ENDPOINT_BASE_URL: "https://practicus.vodafone.local"
+  LLM_MODEL_NAME: "cwyd-llm-general-prod"
+  LLM_MODE: "llm_as_service"
+  LLM_TIMEOUT: "45000"  # 45 seconds (recommended by Vodafone)
+  LLM_SYSTEM_PROMPT: "You are an AI operations assistant for Vodafone. Your role is to help users with technical issues, provide troubleshooting guidance, and answer questions about systems and operations. Provide clear, accurate, and helpful responses in a professional manner."
+  
+  # LDAP Configuration (Vpara Active Directory)
+  LDAP_URL: "ldaps://172.31.234.41:636"
+  LDAP_DOMAIN: "Vpara.local"
+  LDAP_BASE_DN: "DC=vpara,DC=local"
+  LDAP_USER_SEARCH_BASE: "OU=VPARA,DC=vpara,DC=local"
+  LDAP_USER_SEARCH_FILTER: "(sAMAccountName={0})"
+  LDAP_AUTH_GROUP: "CN=vepas_genaiops_edit,OU=Groups,DC=vpara,DC=local"
+  
+  # JWT Configuration
+  JWT_EXPIRATION: "28800000"  # 8 hours
+  
+  # Admin User Configuration
+  ADMIN_USERNAME: "admin"
+  ADMIN_ENABLED: "true"
+  
+  # Application Configuration
+  SPRING_PROFILES_ACTIVE: "production"
+  
+  # Logging Configuration
+  LOGGING_LEVEL_ROOT: "INFO"
+  LOGGING_LEVEL_APP: "DEBUG"

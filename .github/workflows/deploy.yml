@@ -1,0 +1,213 @@
+name: Build and Deploy to OpenShift
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+env:
+  REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
+  OPENSHIFT_SERVER: ${{ secrets.OPENSHIFT_SERVER }}
+  OPENSHIFT_NAMESPACE: genai-ops
+
+jobs:
+  build-backend:
+    name: Build Backend
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    
+    - name: Build with Maven
+      run: |
+        cd backend
+        mvn clean package -DskipTests
+    
+    - name: Run tests
+      run: |
+        cd backend
+        mvn test
+      continue-on-error: false  # Test başarısız olursa pipeline durur
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ secrets.REGISTRY_URL }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    
+    - name: Build and push Backend Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./backend
+        push: true
+        tags: |
+          ${{ secrets.REGISTRY_URL }}/genai-ops-backend:latest
+          ${{ secrets.REGISTRY_URL }}/genai-ops-backend:${{ github.sha }}
+
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Run tests
+      run: |
+        cd frontend
+        npm test -- --run
+      continue-on-error: true  # Frontend testleri yoksa devam et
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ secrets.REGISTRY_URL }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    
+    - name: Build and push Frontend Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./frontend
+        push: true
+        build-args: |
+          VITE_API_URL=https://genaiops-api.vpara.local
+        tags: |
+          ${{ secrets.REGISTRY_URL }}/genai-ops-frontend:latest
+          ${{ secrets.REGISTRY_URL }}/genai-ops-frontend:${{ github.sha }}
+
+  deploy:
+    name: Deploy to OpenShift
+    runs-on: ubuntu-latest
+    needs: [build-backend, build-frontend]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Install OpenShift CLI
+      uses: redhat-actions/openshift-tools-installer@v1
+      with:
+        oc: latest
+    
+    - name: Log in to OpenShift
+      run: |
+        oc login --token=${{ secrets.OPENSHIFT_TOKEN }} --server=${{ secrets.OPENSHIFT_SERVER }}
+        oc project ${{ env.OPENSHIFT_NAMESPACE }}
+    
+    - name: Deploy LDAP CA Certificate ConfigMap (if not exists)
+      run: |
+        if ! oc get configmap vpara-ldap-ca-cert &> /dev/null; then
+          echo "⚠️  WARNING: vpara-ldap-ca-cert ConfigMap not found!"
+          echo "Please create it manually with Vpara Root CA certificate"
+          echo "See VPARA-LDAP-SETUP.md for instructions"
+        else
+          echo "✓ LDAP CA Certificate ConfigMap exists"
+        fi
+    
+    - name: Deploy ConfigMap
+      run: |
+        oc apply -f deployment/configmap.yaml
+        echo "✓ ConfigMap deployed"
+    
+    - name: Check Secret (Security)
+      run: |
+        if ! oc get secret genai-ops-secret &> /dev/null; then
+          echo "⚠️  WARNING: genai-ops-secret not found!"
+          echo "Creating from template - MUST UPDATE PRODUCTION VALUES!"
+          oc apply -f deployment/secret.yaml
+          echo "⚠️  IMPORTANT: Update secret values before production use:"
+          echo "  - DB_PASSWORD"
+          echo "  - LDAP_BIND_PASSWORD"
+          echo "  - LLM_API_TOKEN"
+          echo "  - JWT_SECRET"
+          echo "  - ADMIN_PASSWORD"
+        else
+          echo "✓ Secret exists (not updating to preserve production values)"
+        fi
+    
+    - name: Deploy PostgreSQL
+      run: |
+        oc apply -f deployment/postgres-deployment.yaml
+        echo "Waiting for PostgreSQL to be ready..."
+        oc wait --for=condition=ready pod -l component=database --timeout=120s || true
+        echo "✓ PostgreSQL deployed"
+    
+    - name: Deploy Backend
+      run: |
+        oc apply -f deployment/backend-deployment.yaml
+        oc set image deployment/genai-ops-backend \
+          backend=${{ secrets.REGISTRY_URL }}/genai-ops-backend:${{ github.sha }}
+        echo "Waiting for backend rollout..."
+        oc rollout status deployment/genai-ops-backend --timeout=5m
+        echo "✓ Backend deployed"
+    
+    - name: Deploy Frontend
+      run: |
+        oc apply -f deployment/frontend-deployment.yaml
+        oc set image deployment/genai-ops-frontend \
+          frontend=${{ secrets.REGISTRY_URL }}/genai-ops-frontend:${{ github.sha }}
+        echo "Waiting for frontend rollout..."
+        oc rollout status deployment/genai-ops-frontend --timeout=5m
+        echo "✓ Frontend deployed"
+    
+    - name: Deploy Routes
+      run: |
+        oc apply -f deployment/route.yaml
+        echo "✓ Routes deployed"
+    
+    - name: Verify Deployment
+      run: |
+        echo "=== Deployment Summary ==="
+        echo ""
+        echo "=== Pods ==="
+        oc get pods -o wide
+        echo ""
+        echo "=== Services ==="
+        oc get svc
+        echo ""
+        echo "=== Routes ==="
+        oc get routes
+        echo ""
+        echo "=== Deployments ==="
+        oc get deployments
+        echo ""
+        echo "=== ConfigMaps ==="
+        oc get configmap | grep genai-ops
+        echo ""
+        echo "=== Secrets ==="
+        oc get secret | grep genai-ops
+        echo ""
+        echo "✓ Deployment completed successfully!"
+        echo ""
+        echo "🌐 Application URLs:"
+        FRONTEND_URL=$(oc get route genai-ops -o jsonpath='{.spec.host}' 2>/dev/null || echo "Not found")
+        BACKEND_URL=$(oc get route genai-ops-api -o jsonpath='{.spec.host}' 2>/dev/null || echo "Not found")
+        echo "  Frontend: https://$FRONTEND_URL"
+        echo "  Backend:  https://$BACKEND_URL"
