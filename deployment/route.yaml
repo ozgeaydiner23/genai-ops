@@ -8,32 +8,9 @@ metadata:
   annotations:
     haproxy.router.openshift.io/timeout: 60s
 spec:
-  host: genaiops.vpara.local
   to:
     kind: Service
     name: genai-ops-frontend
-    weight: 100
-  port:
-    targetPort: http
-  tls:
-    termination: edge
-    insecureEdgeTerminationPolicy: Redirect
-  wildcardPolicy: None
----
-apiVersion: route.openshift.io/v1
-kind: Route
-metadata:
-  name: genai-ops-api
-  namespace: genai-ops
-  labels:
-    app: genai-ops
-  annotations:
-    haproxy.router.openshift.io/timeout: 60s
-spec:
-  host: genaiops-api.vpara.local
-  to:
-    kind: Service
-    name: genai-ops-backend
     weight: 100
   port:
     targetPort: http

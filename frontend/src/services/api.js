@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+// Get API URL from runtime config (injected by env.sh) or build-time env
+// Empty string means use relative path (same origin via nginx proxy)
+const API_BASE_URL = window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL || ''
 
 // Create axios instance
 const api = axios.create({

@@ -37,6 +37,12 @@ RUN chgrp -R 0 /usr/share/nginx/html && \
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Copy environment variable injection script
+COPY env.sh /docker-entrypoint.d/env.sh
+RUN chmod +x /docker-entrypoint.d/env.sh && \
+    chgrp 0 /docker-entrypoint.d/env.sh && \
+    chmod g+rwX /docker-entrypoint.d/env.sh
+
 # Use non-root user (OpenShift will override this with random UID)
 USER 1001
 
