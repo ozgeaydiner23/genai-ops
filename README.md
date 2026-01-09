@@ -19,6 +19,7 @@ GENAI-OPS is a modern web application that leverages Large Language Models (LLM)
 - **[LLM-INTEGRATION.md](./LLM-INTEGRATION.md)** - LLM Service Integration Guide
 - **[VODAFONE-LLM-API.md](./VODAFONE-LLM-API.md)** - Vodafone Practicus LLM API Guide
 - **[VPARA-LDAP-SETUP.md](./VPARA-LDAP-SETUP.md)** - Vpara Active Directory LDAP Setup
+- **[EXTERNAL-DATABASE-SETUP.md](./EXTERNAL-DATABASE-SETUP.md)** - External PostgreSQL Database Setup
 - **[GITHUB-WORKFLOW-SETUP.md](./GITHUB-WORKFLOW-SETUP.md)** - GitHub Actions CI/CD Setup
 - **[deployment/DEPLOYMENT.md](./deployment/DEPLOYMENT.md)** - OpenShift Deployment Guide
 

@@ -6,9 +6,10 @@ metadata:
   labels:
     app: genai-ops
 data:
-  # Database Configuration
-  DB_URL: "jdbc:postgresql://postgres-service:5432/genaiops"
-  DB_USERNAME: "genaiops"
+  # Database Configuration (External PostgreSQL)
+  # Update these values with your external PostgreSQL details
+  DB_URL: "jdbc:postgresql://your-postgres-host:5432/genaiops"
+  DB_USERNAME: "genaiops_user"
   
   # LLM Service Configuration (Vodafone Practicus API)
   LLM_ENDPOINT_BASE_URL: "https://practicus.vodafone.local"

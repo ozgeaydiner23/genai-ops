@@ -162,7 +162,7 @@ jobs:
           echo "Creating from template - MUST UPDATE PRODUCTION VALUES!"
           oc apply -f deployment/secret.yaml
           echo "⚠️  IMPORTANT: Update secret values before production use:"
-          echo "  - DB_PASSWORD"
+          echo "  - DB_PASSWORD (External PostgreSQL password)"
           echo "  - LDAP_BIND_PASSWORD"
           echo "  - LLM_API_TOKEN"
           echo "  - JWT_SECRET"
@@ -171,12 +171,15 @@ jobs:
           echo "✓ Secret exists (not updating to preserve production values)"
         fi
     
-    - name: Deploy PostgreSQL
+    - name: Verify External Database Connection
       run: |
-        oc apply -f deployment/postgres-deployment.yaml
-        echo "Waiting for PostgreSQL to be ready..."
-        oc wait --for=condition=ready pod -l component=database --timeout=120s || true
-        echo "✓ PostgreSQL deployed"
+        echo "⚠️  NOTE: Using external PostgreSQL database"
+        echo "Make sure the following are configured:"
+        echo "  1. DB_URL in ConfigMap points to external PostgreSQL"
+        echo "  2. DB_PASSWORD in Secret is correct"
+        echo "  3. Network access from OpenShift to PostgreSQL is allowed"
+        echo "  4. Database 'genaiops' exists"
+        echo "  5. User has necessary permissions"
     
     - name: Deploy Backend
       run: |
