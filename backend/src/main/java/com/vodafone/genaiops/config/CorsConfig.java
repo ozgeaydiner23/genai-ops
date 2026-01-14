@@ -3,26 +3,40 @@ package com.vodafone.genaiops.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class CorsConfig {
 
     @Bean
-    public CorsFilter corsFilter() {
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        
+        // Allow all origins (since we're behind nginx proxy, requests come from same origin)
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        
+        // Allow common HTTP methods
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        
+        // Allow common headers
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        
+        // Allow credentials (cookies, authorization headers)
+        configuration.setAllowCredentials(true);
+        
+        // Cache preflight response for 1 hour
+        configuration.setMaxAge(3600L);
+        
+        // Expose headers that frontend can access
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
+        source.registerCorsConfiguration("/**", configuration);
         
-        config.setAllowCredentials(true);
-        config.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173"));
-        config.setAllowedHeaders(Arrays.asList("*"));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setMaxAge(3600L);
-        
-        source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
+        return source;
     }
 }
