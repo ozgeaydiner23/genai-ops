@@ -114,7 +114,7 @@ jobs:
         context: ./frontend
         push: true
         build-args: |
-          VITE_API_URL=https://genaiops-api.vpara.local
+          VITE_API_URL=
         tags: |
           ${{ env.REGISTRY_URL }}/${{ github.repository_owner }}/genai-ops-frontend:latest
           ${{ env.REGISTRY_URL }}/${{ github.repository_owner }}/genai-ops-frontend:${{ github.sha }}

@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: your-registry/genai-ops-frontend:latest
+        image: containers.github.vpara.local/vepas-ai/genai-ops-frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
