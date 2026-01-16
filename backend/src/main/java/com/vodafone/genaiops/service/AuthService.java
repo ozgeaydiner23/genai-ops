@@ -36,6 +36,9 @@ public class AuthService {
     @Value("${ldap.url}")
     private String ldapUrl;
 
+    @Value("${ldap.domain}")
+    private String ldapDomain;
+
     @Value("${ldap.base-dn}")
     private String ldapBaseDn;
 
