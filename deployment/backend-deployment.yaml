@@ -18,12 +18,6 @@ spec:
         app: genai-ops
         component: backend
     spec:
-      hostAliases:
-      - ip: "172.31.234.41"
-        hostnames:
-        - "vpara.local"
-        - "ldaps.vpara.local"
-      
       containers:
       - name: backend
         image: containers.github.vpara.local/vepas-ai/genai-ops-backend:latest
@@ -98,16 +92,17 @@ spec:
             configMapKeyRef:
               name: genai-ops-config
               key: LDAP_BASE_DN
-        - name: LDAP_BIND_DN
-          valueFrom:
-            secretKeyRef:
-              name: genai-ops-secret
-              key: LDAP_BIND_DN
-        - name: LDAP_BIND_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: genai-ops-secret
-              key: LDAP_BIND_PASSWORD
+        # Temporarily disabled - testing direct bind
+        # - name: LDAP_BIND_DN
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: genai-ops-secret
+        #       key: LDAP_BIND_DN
+        # - name: LDAP_BIND_PASSWORD
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: genai-ops-secret
+        #       key: LDAP_BIND_PASSWORD
         - name: LDAP_USER_SEARCH_BASE
           valueFrom:
             configMapKeyRef:
@@ -128,7 +123,7 @@ spec:
         
         # Java SSL/TLS Configuration for custom truststore
         - name: JAVA_TOOL_OPTIONS
-          value: "-Djavax.net.ssl.trustStore=/etc/ssl/certs/vpara-ca/cacerts -Djavax.net.ssl.trustStoreType=PKCS12"
+          value: "-Djavax.net.ssl.trustStore=/etc/ssl/certs/vpara-ca/cacerts -Djavax.net.ssl.trustStoreType=PKCS12 -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true"
         
         # JWT Configuration
         - name: JWT_SECRET

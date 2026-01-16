@@ -121,8 +121,33 @@ public class AuthService {
     /**
      * Authenticate user with Vpara Active Directory LDAP
      * Uses service account bind for user search, then verifies user password
+     * Falls back to direct user bind if service account is not configured
      */
     private boolean authenticateWithLdap(String username, String password) {
+        try {
+            log.debug("LDAP Authentication - URL: {}, Base DN: {}, Search Base: {}", 
+                     ldapUrl, ldapBaseDn, userSearchBase);
+
+            // Check if service account bind is configured
+            if (ldapBindDn != null && !ldapBindDn.trim().isEmpty() && 
+                ldapBindPassword != null && !ldapBindPassword.trim().isEmpty()) {
+                log.info("Using service account bind for user: {}", username);
+                return authenticateWithServiceAccount(username, password);
+            } else {
+                log.info("Service account not configured, using direct user bind for: {}", username);
+                return authenticateWithDirectBind(username, password);
+            }
+
+        } catch (Exception e) {
+            log.error("LDAP authentication error for user {}: {}", username, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Authenticate using service account bind
+     */
+    private boolean authenticateWithServiceAccount(String username, String password) {
         try {
             log.debug("LDAP Authentication - URL: {}, Base DN: {}, Search Base: {}", 
                      ldapUrl, ldapBaseDn, userSearchBase);
@@ -202,7 +227,53 @@ public class AuthService {
             return true;
 
         } catch (Exception e) {
-            log.error("LDAP authentication error for user {}: {}", username, e.getMessage(), e);
+            log.error("Service account LDAP authentication error for user {}: {}", username, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Authenticate using direct user bind (fallback method)
+     * Tries multiple DN formats: username@domain, DOMAIN\username, CN=username,base
+     */
+    private boolean authenticateWithDirectBind(String username, String password) {
+        try {
+            // Try different user DN formats
+            String[] userDnFormats = {
+                username + "@" + ldapDomain,  // username@Vpara.local
+                ldapDomain.split("\\.")[0].toUpperCase() + "\\" + username,  // VPARA\username
+                "CN=" + username + "," + ldapBaseDn  // CN=username,DC=vpara,DC=local
+            };
+
+            for (String userDn : userDnFormats) {
+                try {
+                    log.debug("Trying direct bind with DN format: {}", userDn);
+                    
+                    LdapContextSource contextSource = new LdapContextSource();
+                    contextSource.setUrl(ldapUrl);
+                    contextSource.setBase(ldapBaseDn);
+                    contextSource.setUserDn(userDn);
+                    contextSource.setPassword(password);
+                    contextSource.afterPropertiesSet();
+
+                    // Test authentication by getting context
+                    DirContext ctx = contextSource.getContext(userDn, password);
+                    ctx.close();
+                    
+                    log.info("Direct bind successful with format: {}", userDn);
+                    return true;
+                    
+                } catch (Exception e) {
+                    log.debug("Direct bind failed with format {}: {}", userDn, e.getMessage());
+                    continue;
+                }
+            }
+            
+            log.warn("Direct bind failed for user {} with all DN formats", username);
+            return false;
+
+        } catch (Exception e) {
+            log.error("Direct bind error for user {}: {}", username, e.getMessage());
             return false;
         }
     }
