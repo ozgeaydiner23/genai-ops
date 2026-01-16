@@ -18,6 +18,12 @@ spec:
         app: genai-ops
         component: backend
     spec:
+      hostAliases:
+      - ip: "172.31.234.41"
+        hostnames:
+        - "vpara.local"
+        - "ldaps.vpara.local"
+      
       containers:
       - name: backend
         image: containers.github.vpara.local/vepas-ai/genai-ops-backend:latest

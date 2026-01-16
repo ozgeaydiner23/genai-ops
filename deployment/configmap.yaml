@@ -19,10 +19,10 @@ data:
   LLM_SYSTEM_PROMPT: "You are an AI operations assistant for Vodafone. Your role is to help users with technical issues, provide troubleshooting guidance, and answer questions about systems and operations. Provide clear, accurate, and helpful responses in a professional manner."
   
   # LDAP Configuration (Vpara Active Directory)
-  LDAP_URL: "ldaps://172.31.234.41:636"
+  LDAP_URL: "ldaps://vpara.local:636"
   LDAP_DOMAIN: "Vpara.local"
   LDAP_BASE_DN: "DC=vpara,DC=local"
-  LDAP_USER_SEARCH_BASE: "OU=VPARA,DC=vpara,DC=local"
+  LDAP_USER_SEARCH_BASE: "DC=vpara,DC=local"
   LDAP_USER_SEARCH_FILTER: "(sAMAccountName={0})"
   LDAP_AUTH_GROUP: "CN=vepas_genaiops_edit,OU=Groups,DC=vpara,DC=local"
   
