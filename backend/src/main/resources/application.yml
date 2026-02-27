@@ -1,4 +1,4 @@
-server:
+ server:
   port: 8080
 
 spring:
@@ -40,8 +40,8 @@ ldap:
   url: ${LDAP_URL:ldaps://172.31.234.41:636}
   domain: ${LDAP_DOMAIN:Vpara.local}
   base-dn: ${LDAP_BASE_DN:DC=vpara,DC=local}
-  bind-dn: ${LDAP_BIND_DN:CN=srvc.ldap_prd,OU=VFTR_Admin,OU=VPARA,DC=vpara,DC=local}
-  bind-password: ${LDAP_BIND_PASSWORD:admin}
+  bind-dn: ${LDAP_BIND_DN:}
+  bind-password: ${LDAP_BIND_PASSWORD:}
   user-search-base: ${LDAP_USER_SEARCH_BASE:OU=VPARA,DC=vpara,DC=local}
   user-search-filter: ${LDAP_USER_SEARCH_FILTER:(sAMAccountName={0})}
   auth-group: ${LDAP_AUTH_GROUP:CN=vepas_genaiops_edit,OU=Groups,DC=vpara,DC=local}
